@@ -380,7 +380,7 @@ module.exports = class Parse {
           ];
           if (
             previous === null ||
-            !previous.pos_detail_1 === Parse.KAKARIJOSHI &&
+            previous.pos_detail_1 !== Parse.KAKARIJOSHI &&
             qualifyingList1.includes(current.conjugated_type)
           )
             attachToPrevious = true;
@@ -389,7 +389,7 @@ module.exports = class Parse {
           else if (
             current.conjugated_type === Parse.TOKUSHU_DA ||
             current.basic_form === Parse.TOKUSHU_DESU &&
-            !current.surface_form === Parse.NA
+            current.surface_form !== Parse.NA
           )
             pos = Pos.Verb;
           break;
@@ -400,7 +400,7 @@ module.exports = class Parse {
               attachToPrevious = true;
               break;
             case Parse.HIJIRITSU:
-              if (!current.conjugated_form === Parse.MEIREI_I)
+              if (current.conjugated_form !== Parse.MEIREI_I)
                 attachToPrevious = true;
             default:
               break;
