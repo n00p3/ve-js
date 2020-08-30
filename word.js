@@ -32,7 +32,7 @@ class Word {
     if (this.reading === null)
       this.reading = '_'.concat(suffix);
     else
-      this.reading = this.word.concat(suffix);
+      this.reading = this.reading.concat(suffix);
   }
 
   appendToTranscription(suffix) {
