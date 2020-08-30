@@ -445,8 +445,8 @@ module.exports = class Parse {
       if (attachToPrevious && wordList.length > 0) {
         wordList[finalSlot].tokens.push(current);
         wordList[finalSlot].appendToWord(current.surface_form);
-        wordList[finalSlot].appendToReading(current.reading);
-        wordList[finalSlot].appendToTranscription(current.pronunciation);
+        wordList[finalSlot].appendToReading(this.getFeatureSafely(current, 'reading'));
+        wordList[finalSlot].appendToTranscription(this.getFeatureSafely(current, 'pronunciation'));
         if (alsoAttachToLemma)
           wordList[finalSlot].appendToLemma(current.basic_form);
         if (updatePos)
@@ -454,7 +454,7 @@ module.exports = class Parse {
       } else {
         let word = new Word(
           current.reading,
-          current.pronunciation,
+          this.getFeatureSafely(current, 'pronunciation'),
           grammar,
           current.basic_form,
           pos,
@@ -468,7 +468,7 @@ module.exports = class Parse {
           word.tokens.push(following);
           word.appendToWord(following.surface_form);
           word.appendToReading(following.reading);
-          word.appendToTranscription(following.pronunciation);
+          word.appendToTranscription(this.getFeatureSafely(following, 'pronunciation'));
           if (eatLemma)
             word.appendToLemma(following.basic_form);
         }
@@ -483,11 +483,9 @@ module.exports = class Parse {
    * Return an asterisk if pronunciation field isn't in array (READING and PRONUNCIATION fields are left undefined,
    * rather than as "*" by MeCab). Other feature fields are guaranteed to be safe, however.
    */
-  // getFeatureSafely(token, feature) {
-  //   if (feature > Parse.PRONUNCIATION)
-  //     throw new Error('Asked for a feature out of bounds.')
-  //   return token.TODO.length >= feature + 1 ? token.TODO[feature] : '*';
-  // }
+  getFeatureSafely(token, feature) {
+    return token[feature] ? token[feature] : '*';
+  }
 }
 
 
