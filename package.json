@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "kuromoji": "^0.1.2"
+    "kuromojin": "^2.0.0"
   }
 }

@@ -1,4 +1,4 @@
-const kuromoji = require('kuromoji');
+const kuromojin = require('kuromojin');
 const Grammar = require('./grammar')
 const Pos = require('./pos');
 
@@ -263,7 +263,7 @@ module.exports = class Parse {
    * @return List of all words in the instance's tokenArray, or an empty list if tokenArray was empty.
    *         Ve returns an asterisk if no word was recognised.
    */
-  words() {
+  async words() {
     const wordList = [];
     let current = null;
     let previous = null;
@@ -281,17 +281,17 @@ module.exports = class Parse {
       let alsoAttachToLemma = false;
       let updatePos = false;
 
-      let currentPOSArray = [] // TODO
+      let currentPOSArray = await kuromojin.tokenize(current);
 
-      if (currentPOSArray.length === 0 || currentPOSArray[Parse.POS1] === Parse.NO_DATA)
+      if (Object.keys(currentPOSArray).length === 0 || currentPOSArray.pos === Parse.NO_DATA)
         throw new Error('No Pos data found for token.');
 
-      switch (currentPOSArray[Parse.POS1]) {
+      switch (currentPOSArray.pos) {
         case Parse.MEISHI:
           pos = Pos.Noun;
-          if (currentPOSArray[Parse.POS2] === Parse.NO_DATA)
+          if (currentPOSArray.pos_detail_1 === Parse.NO_DATA)
             break;
-          switch (currentPOSArray[Parse.POS2]) {
+          switch (currentPOSArray.pos_detail_1) {
             case Parse.KOYUUMEISHI:
               pos = Pos.ProperNoun;
               break;
@@ -302,20 +302,20 @@ module.exports = class Parse {
             case Parse.SAHENSETSUZOKU:
             case Parse.KEIYOUDOUSHIGOKAN:
             case Parse.NAIKEIYOUSHIGOKAN:
-              if (currentPOSArray[Parse.POS3] === Parse.NO_DATA)
+              if (currentPOSArray.pos_detail_2 === Parse.NO_DATA)
                 break;
               if (i === this.tokenArray.length - 1)
                 break;
 
               following = this.tokenArray[i + 1];
-              switch (following[TODO]) { // TODO
+              switch (following.conjugated_type) {
                 case Parse.SAHEN_SURU:
                   pos = Pos.Verb;
                   eatNext = true;
                   break;
                 case Parse.TOKUSHU_DA:
                   pos = Pos.Adjective;
-                  if (TODO === Parse.TAIGENSETSUZOKU) {// TODO
+                  if (following.pos_detail_1 === Parse.TAIGENSETSUZOKU) {
                     eatNext = true;
                     eatLemma = false;
                   }
@@ -325,40 +325,44 @@ module.exports = class Parse {
                   eatNext = true;
                   break;
                 default:
-                  if (TODO == Parse.JOSHI && TODO == Parse.NI)
+                  if (following.pos === Parse.JOSHI && following.surface_form === Parse.NI)
                     pos = Pos.Adverb;
                   break;
               }
               break;
             case Parse.HIJIRITSU:
             case Parse.TOKUSHU:
-              if (TODO === Parse.NO_DATA) // TODO
+              if (currentPOSArray.pos_detail_2 === Parse.NO_DATA)
                 break;
               if (i === this.tokenArray.length - 1)
                 break;
               following = this.tokenArray[i + 1];
 
-              switch (currentPOSArray[Parse.POS3]) {
+              switch (currentPOSArray.pos_detail_2){
                 case Parse.FUKUSHIKANOU:
-                  if (TODO === Parse.JOSHI && SURF_FORM === Parse.NI) { // TODO
+                  if (following.pos === Parse.JOSHI && following.surface_form === Parse.NI) {
                     pos = Pos.Adverb;
                     eatNext = false;
                   }
                   break;
                 case Parse.JODOUSHIGOKAN:
-                  if (TODO === Parse.TOKUSHU_DA) { // TODO
+                  if (following.conjugated_type === Parse.TOKUSHU_DA) {
                     pos = Pos.Verb;
                     grammar = Grammar.Auxiliary;
-                    if (TODO === Parse.TAIGENSETSUZOKU)
+                    if (following.conjugated_form === Parse.TAIGENSETSUZOKU)
                       eatNext = true;
-                  } else if (TODO === Parse.JOSHI && TODO === Parse.FUKUSHIKA) {
+                  } else if (following.pos === Parse.JOSHI && following.pos_detail_2 === Parse.FUKUSHIKA) {
                     pos = Pos.Adverb;
                     eatNext = true;
                   }
                   break;
                 case Parse.KEIYOUDOUSHIGOKAN:
                   pos = Pos.Adjective;
-                  if (TODO === Parse.TOKUSHU_DA && TODO === Parse.TAIGENSETSUZOKU || TODO === Parse.RENTAIKA)
+                  if (
+                    following.conjugated_type === Parse.TOKUSHU_DA &&
+                    following.conjugated_type === Parse.TAIGENSETSUZOKU ||
+                    following.pos_detail_1 === Parse.RENTAIKA
+                  )
                     eatNext = true;
                   break;
                 default:
@@ -366,16 +370,16 @@ module.exports = class Parse {
               }
             case Parse.KAZU:
               pos = Pos.Number;
-              if (wordList.length > 0 && wordList[finalSlot].TODO === Pos.Number) {
+              if (wordList.length > 0 && wordList[finalSlot].pos === Parse.KAZU) {
                 attachToPrevious = true;
                 alsoAttachToLemma = true;
               }
               break;
             case Parse.SETSUBI:
-              if (currentPOSArray[Parse.POS3] === Parse.JINMEI)
+              if (currentPOSArray.pos_detail_2 === Parse.JINMEI)
                 pos = Pos.Suffix;
               else {
-                if (currentPOSArray[Parse.POS3] === Parse.TOKUSHU && currentPOSArray.TODO === Parse.SA) {
+                if (currentPOSArray.pos_detail_2 === Parse.TOKUSHU && currentPOSArray.basic_form === Parse.SA) {
                   updatePos = true;
                   pos = Pos.Noun;
                 } else
@@ -406,25 +410,29 @@ module.exports = class Parse {
             Parse.TOKUSHU_MASU,
             Parse.TOKUSHU_NU
           ];
-          if (previous === null || !TODO === Parse.KAKARIJOSHI && qualifyingList1.includes((current.TODO)))
+          if (
+            previous === null ||
+            !previous.pos_detail_1 === Parse.KAKARIJOSHI &&
+            qualifyingList1.includes(current.conjugated_type)
+          )
             attachToPrevious = true;
-          else if (current.TODO === Parse.FUHENKAGATA && current.TODO === Parse.NN)
+          else if (current.conjugated_type === Parse.FUHENKAGATA && current.basic_form === Parse.NN)
             attachToPrevious = true;
           else if (
-            current.TODO === Parse.TOKUSHU_DA ||
-            current.TODO === Parse.TOKUSHU_DESU &&
-            !current.TODO === Parse.NA
+            current.conjugated_type === Parse.TOKUSHU_DA ||
+            current.basic_form === Parse.TOKUSHU_DESU &&
+            !current.surface_form === Parse.NA
           )
             pos = Pos.Verb;
           break;
         case Parse.DOUSHI:
           pos = Pos.Verb;
-          switch (currentPOSArray[Parse.POS2]) {
+          switch (currentPOSArray.pos_detail_1) {
             case Parse.SETSUBI:
               attachToPrevious = true;
               break;
             case Parse.HIJIRITSU:
-              if (!current.TODO === Parse.MEIREI_I)
+              if (!current.conjugated_form === Parse.MEIREI_I)
                 attachToPrevious = true;
             default:
               break;
@@ -437,9 +445,9 @@ module.exports = class Parse {
           pos = Pos.Postposition;
           const qualifyingList2 = [Parse.TE, Parse.DE, Parse.BA];
           if (
-            currentPOSArray[Parse.POS2] === Parse.SETSUZOKUJOSHI &&
-            qualifyingList2.includes(currentPOSArray.TODO) ||
-            current.TODO === Parse.NI
+            currentPOSArray.pos_detail_1 === Parse.SETSUZOKUJOSHI &&
+            qualifyingList2.includes(currentPOSArray.surface_form) ||
+            current.surface_form === Parse.NI
           )
             attachToPrevious = true;
           break;
@@ -467,7 +475,7 @@ module.exports = class Parse {
       }
 
       if (attachToPrevious && wordList.length > 0) {
-        // wordList[finalSlot]
+        // wordList[finalSlot].
         // TODO
       } else {
         let word = undefined;
@@ -489,7 +497,7 @@ module.exports = class Parse {
    * Return an asterisk if pronunciation field isn't in array (READING and PRONUNCIATION fields are left undefined,
    * rather than as "*" by MeCab). Other feature fields are guaranteed to be safe, however.
    */
-  getFeature3Safely(token, feature) {
+  getFeatureSafely(token, feature) {
     if (feature > Parse.PRONUNCIATION)
       throw new Error('Asked for a feature out of bounds.')
     return token.TODO.length >= feature + 1 ? token.TODO[feature] : '*';

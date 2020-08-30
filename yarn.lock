@@ -14,21 +14,28 @@ doublearray@0.0.2:
   resolved "https://registry.yarnpkg.com/doublearray/-/doublearray-0.0.2.tgz#63186fe8d34413276d3621f6aa0ec5f79e227ef9"
   integrity sha1-Yxhv6NNEEydtNiH2qg7F954ifvk=
 
-kuromoji@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/kuromoji/-/kuromoji-0.1.2.tgz#293f0d6706df006112137980588d5daac26d0790"
-  integrity sha512-V0dUf+C2LpcPEXhoHLMAop/bOht16Dyr+mDiIE39yX3vqau7p80De/koFqpiTcL1zzdZlc3xuHZ8u5gjYRfFaQ==
+kuromoji@0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/kuromoji/-/kuromoji-0.1.1.tgz#4aabf39bcced8b8ad92d007a04a26be6da8477c9"
+  integrity sha1-Sqvzm8zti4rZLQB6BKJr5tqEd8k=
   dependencies:
     async "^2.0.1"
     doublearray "0.0.2"
-    zlibjs "^0.3.1"
+    zlibjs "^0.2.0"
+
+kuromojin@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/kuromojin/-/kuromojin-2.0.0.tgz#23e74a5ed2578432c9703ae75a69ba0a09ccb12d"
+  integrity sha512-60j/yLkFSc4t4roj8tI8ZNNSiAFnrkgXw8SqXz/9nakfs6mkCvPbrd7S8LDr4YNwEt1IyLys5JQTR9EnYyGHhA==
+  dependencies:
+    kuromoji "0.1.1"
 
 lodash@^4.17.14:
   version "4.17.20"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
   integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
 
-zlibjs@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/zlibjs/-/zlibjs-0.3.1.tgz#50197edb28a1c42ca659cc8b4e6a9ddd6d444554"
-  integrity sha1-UBl+2yihxCymWcyLTmqd3W1ERVQ=
+zlibjs@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/zlibjs/-/zlibjs-0.2.0.tgz#ae20f06243293d85c255563189f9b12f5b3ba1a0"
+  integrity sha1-riDwYkMpPYXCVVYxifmxL1s7oaA=
