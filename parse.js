@@ -1,6 +1,7 @@
 const kuromojin = require('kuromojin');
 const Grammar = require('./grammar')
 const Pos = require('./pos');
+const Word = require('./Word');
 
 module.exports = class Parse {
   tokenArray = [];
@@ -217,7 +218,7 @@ module.exports = class Parse {
   };
 
   constructor(tokenArray) {
-    if (this.tokenArray.length === 0)
+    if (tokenArray.length === 0)
       throw new Error('Cannot parse an empty array of tokens.');
 
     this.tokenArray = tokenArray;
@@ -228,6 +229,9 @@ module.exports = class Parse {
    *         Ve returns an asterisk if no word was recognised.
    */
   async words() {
+    /**
+     * @type {Word[]}
+     */
     const wordList = [];
     let current = null;
     let previous = null;
@@ -245,7 +249,7 @@ module.exports = class Parse {
       let alsoAttachToLemma = false;
       let updatePos = false;
 
-      let currentPOSArray = await kuromojin.tokenize(current);
+      let currentPOSArray = current; // await kuromojin.tokenize(current);
 
       if (Object.keys(currentPOSArray).length === 0 || currentPOSArray.pos === Parse.NO_DATA)
         throw new Error('No Pos data found for token.');
@@ -439,16 +443,34 @@ module.exports = class Parse {
       }
 
       if (attachToPrevious && wordList.length > 0) {
-        // wordList[finalSlot].
-        // TODO
+        wordList[finalSlot].tokens.push(current);
+        wordList[finalSlot].appendToWord(current.surface_form);
+        wordList[finalSlot].appendToReading(current.reading);
+        wordList[finalSlot].appendToTranscription(current.pronunciation);
+        if (alsoAttachToLemma)
+          wordList[finalSlot].appendToLemma(current.basic_form);
+        if (updatePos)
+          wordList[finalSlot].partOfSpeech = pos;
       } else {
-        let word = undefined;
-        // TODO
+        let word = new Word(
+          current.reading,
+          current.pronunciation,
+          grammar,
+          current.basic_form,
+          pos,
+          current.surface_form,
+          current,
+        );
         if (eatNext) {
           if (i === this.tokenArray.length - 1)
             throw new Error("There's a path that allows array overshooting.");
           following = this.tokenArray[i+1];
-          // TODO
+          word.tokens.push(following);
+          word.appendToWord(following.surface_form);
+          word.appendToReading(following.reading);
+          word.appendToTranscription(following.pronunciation);
+          if (eatLemma)
+            word.appendToLemma(following.basic_form);
         }
         wordList.push(word);
       }
