@@ -9,42 +9,6 @@ module.exports = class Parse {
     return '*';
   };
 
-  static get POS1() {
-    return 0;
-  };
-
-  static get POS2() {
-    return 1;
-  };
-
-  static get POS3() {
-    return 2;
-  };
-
-  static get POS4() {
-    return 3;
-  };
-
-  static get CTYPE() {
-    return 4;
-  };
-
-  static get CFORM() {
-    return 5;
-  };
-
-  static get BASIC() {
-    return 6;
-  };
-
-  static get READING() {
-    return 7;
-  };
-
-  static get PRONUNCIATION() {
-    return 8;
-  };
-
   // POS1
   static get MEISHI() {
     return '名詞';
@@ -497,11 +461,11 @@ module.exports = class Parse {
    * Return an asterisk if pronunciation field isn't in array (READING and PRONUNCIATION fields are left undefined,
    * rather than as "*" by MeCab). Other feature fields are guaranteed to be safe, however.
    */
-  getFeatureSafely(token, feature) {
-    if (feature > Parse.PRONUNCIATION)
-      throw new Error('Asked for a feature out of bounds.')
-    return token.TODO.length >= feature + 1 ? token.TODO[feature] : '*';
-  }
+  // getFeatureSafely(token, feature) {
+  //   if (feature > Parse.PRONUNCIATION)
+  //     throw new Error('Asked for a feature out of bounds.')
+  //   return token.TODO.length >= feature + 1 ? token.TODO[feature] : '*';
+  // }
 }
 
 
