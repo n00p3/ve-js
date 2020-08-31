@@ -2,11 +2,12 @@
  * This project is a translation of https://github.com/Kimtaro/ve
  */
 
+const path = require('path');
+const kuromojin = require('kuromojin');
 const Grammar = require('./grammar')
 const Pos = require('./pos');
 const Word = require('./Word');
-const path = require('path');
-const kuromojin = require('kuromojin');
+const camelcaseKeys = require('camelcase-keys');
 
 module.exports = class Ve {
   tokenArray = [];
@@ -222,18 +223,6 @@ module.exports = class Ve {
     return 'さ';
   };
 
-  // constructor(sentence, dicPath = (path.join(__dirname, 'lib'))) {
-  //   return (async () => {
-  //     const tokenArray = await kuromojin.tokenize(sentence,      { dicPath });
-  //     if (tokenArray.length === 0)
-  //       throw new Error('Cannot parse an empty array of tokens.');
-  //
-  //     this.tokenArray = tokenArray;
-  //
-  //     return this;
-  //   })();
-  // }
-
   constructor(dicPath = (path.join(__dirname, 'lib'))) {
     this.dicPath = dicPath;
   }
@@ -250,6 +239,9 @@ module.exports = class Ve {
         });
     if (this.tokenArray.length === 0)
       throw new Error('Cannot parse an empty array of tokens.');
+
+    // Kuromojin uses snake_case.
+    this.tokenArray = camelcaseKeys(this.tokenArray);
 
     /**
      * @type {Word[]}
@@ -279,9 +271,9 @@ module.exports = class Ve {
       switch (currentPOSArray.pos) {
         case Ve.MEISHI:
           pos = Pos.Noun;
-          if (currentPOSArray.pos_detail_1 === Ve.NO_DATA)
+          if (currentPOSArray.posDetail1 === Ve.NO_DATA)
             break;
-          switch (currentPOSArray.pos_detail_1) {
+          switch (currentPOSArray.posDetail1) {
             case Ve.KOYUUMEISHI:
               pos = Pos.ProperNoun;
               break;
@@ -292,20 +284,20 @@ module.exports = class Ve {
             case Ve.SAHENSETSUZOKU:
             case Ve.KEIYOUDOUSHIGOKAN:
             case Ve.NAIKEIYOUSHIGOKAN:
-              if (currentPOSArray.pos_detail_2 === Ve.NO_DATA)
+              if (currentPOSArray.posDetail2 === Ve.NO_DATA)
                 break;
               if (i === this.tokenArray.length - 1)
                 break;
 
               following = this.tokenArray[i + 1];
-              switch (following.conjugated_type) {
+              switch (following.conjugatedType) {
                 case Ve.SAHEN_SURU:
                   pos = Pos.Verb;
                   eatNext = true;
                   break;
                 case Ve.TOKUSHU_DA:
                   pos = Pos.Adjective;
-                  if (following.pos_detail_1 === Ve.TAIGENSETSUZOKU) {
+                  if (following.posDetail1 === Ve.TAIGENSETSUZOKU) {
                     eatNext = true;
                     eatLemma = false;
                   }
@@ -315,33 +307,33 @@ module.exports = class Ve {
                   eatNext = true;
                   break;
                 default:
-                  if (following.pos === Ve.JOSHI && following.surface_form === Ve.NI)
+                  if (following.pos === Ve.JOSHI && following.surfaceForm === Ve.NI)
                     pos = Pos.Adverb;
                   break;
               }
               break;
             case Ve.HIJIRITSU:
             case Ve.TOKUSHU:
-              if (currentPOSArray.pos_detail_2 === Ve.NO_DATA)
+              if (currentPOSArray.posDetail2 === Ve.NO_DATA)
                 break;
               if (i === this.tokenArray.length - 1)
                 break;
               following = this.tokenArray[i + 1];
 
-              switch (currentPOSArray.pos_detail_2){
+              switch (currentPOSArray.posDetail2){
                 case Ve.FUKUSHIKANOU:
-                  if (following.pos === Ve.JOSHI && following.surface_form === Ve.NI) {
+                  if (following.pos === Ve.JOSHI && following.surfaceForm === Ve.NI) {
                     pos = Pos.Adverb;
                     eatNext = false;
                   }
                   break;
                 case Ve.JODOUSHIGOKAN:
-                  if (following.conjugated_type === Ve.TOKUSHU_DA) {
+                  if (following.conjugatedType === Ve.TOKUSHU_DA) {
                     pos = Pos.Verb;
                     grammar = Grammar.Auxiliary;
-                    if (following.conjugated_form === Ve.TAIGENSETSUZOKU)
+                    if (following.conjugatedForm === Ve.TAIGENSETSUZOKU)
                       eatNext = true;
-                  } else if (following.pos === Ve.JOSHI && following.pos_detail_2 === Ve.FUKUSHIKA) {
+                  } else if (following.pos === Ve.JOSHI && following.posDetail2 === Ve.FUKUSHIKA) {
                     pos = Pos.Adverb;
                     eatNext = true;
                   }
@@ -349,9 +341,9 @@ module.exports = class Ve {
                 case Ve.KEIYOUDOUSHIGOKAN:
                   pos = Pos.Adjective;
                   if (
-                    following.conjugated_type === Ve.TOKUSHU_DA &&
-                    following.conjugated_type === Ve.TAIGENSETSUZOKU ||
-                    following.pos_detail_1 === Ve.RENTAIKA
+                    following.conjugatedType === Ve.TOKUSHU_DA &&
+                    following.conjugatedType === Ve.TAIGENSETSUZOKU ||
+                    following.posDetail1 === Ve.RENTAIKA
                   )
                     eatNext = true;
                   break;
@@ -367,10 +359,10 @@ module.exports = class Ve {
               }
               break;
             case Ve.SETSUBI:
-              if (currentPOSArray.pos_detail_2 === Ve.JINMEI)
+              if (currentPOSArray.posDetail2 === Ve.JINMEI)
                 pos = Pos.Suffix;
               else {
-                if (currentPOSArray.pos_detail_2 === Ve.TOKUSHU && currentPOSArray.basic_form === Ve.SA) {
+                if (currentPOSArray.posDetail2 === Ve.TOKUSHU && currentPOSArray.basicForm === Ve.SA) {
                   updatePos = true;
                   pos = Pos.Noun;
                 } else
@@ -403,27 +395,27 @@ module.exports = class Ve {
           ];
           if (
             previous === null ||
-            previous.pos_detail_1 !== Ve.KAKARIJOSHI &&
-            qualifyingList1.includes(current.conjugated_type)
+            previous.posDetail1 !== Ve.KAKARIJOSHI &&
+            qualifyingList1.includes(current.conjugatedType)
           )
             attachToPrevious = true;
-          else if (current.conjugated_type === Ve.FUHENKAGATA && current.basic_form === Ve.NN)
+          else if (current.conjugatedType === Ve.FUHENKAGATA && current.basicForm === Ve.NN)
             attachToPrevious = true;
           else if (
-            current.conjugated_type === Ve.TOKUSHU_DA ||
-            current.basic_form === Ve.TOKUSHU_DESU &&
-            current.surface_form !== Ve.NA
+            current.conjugatedType === Ve.TOKUSHU_DA ||
+            current.basicForm === Ve.TOKUSHU_DESU &&
+            current.surfaceForm !== Ve.NA
           )
             pos = Pos.Verb;
           break;
         case Ve.DOUSHI:
           pos = Pos.Verb;
-          switch (currentPOSArray.pos_detail_1) {
+          switch (currentPOSArray.posDetail1) {
             case Ve.SETSUBI:
               attachToPrevious = true;
               break;
             case Ve.HIJIRITSU:
-              if (current.conjugated_form !== Ve.MEIREI_I)
+              if (current.conjugatedForm !== Ve.MEIREI_I)
                 attachToPrevious = true;
             default:
               break;
@@ -436,9 +428,9 @@ module.exports = class Ve {
           pos = Pos.Postposition;
           const qualifyingList2 = [Ve.TE, Ve.DE, Ve.BA];
           if (
-            currentPOSArray.pos_detail_1 === Ve.SETSUZOKUJOSHI &&
-            qualifyingList2.includes(currentPOSArray.surface_form) ||
-            current.surface_form === Ve.NI
+            currentPOSArray.posDetail1 === Ve.SETSUZOKUJOSHI &&
+            qualifyingList2.includes(currentPOSArray.surfaceForm) ||
+            current.surfaceForm === Ve.NI
           )
             attachToPrevious = true;
           break;
@@ -467,11 +459,11 @@ module.exports = class Ve {
 
       if (attachToPrevious && wordList.length > 0) {
         wordList[finalSlot].tokens.push(current);
-        wordList[finalSlot].appendToWord(current.surface_form);
+        wordList[finalSlot].appendToWord(current.surfaceForm);
         wordList[finalSlot].appendToReading(this.getFeatureSafely(current, 'reading'));
         wordList[finalSlot].appendToTranscription(this.getFeatureSafely(current, 'pronunciation'));
         if (alsoAttachToLemma)
-          wordList[finalSlot].appendToLemma(current.basic_form);
+          wordList[finalSlot].appendToLemma(current.basicForm);
         if (updatePos)
           wordList[finalSlot].partOfSpeech = pos;
       } else {
@@ -479,9 +471,9 @@ module.exports = class Ve {
           current.reading,
           this.getFeatureSafely(current, 'pronunciation'),
           grammar,
-          current.basic_form,
+          current.basicForm,
           pos,
-          current.surface_form,
+          current.surfaceForm,
           current,
         );
         if (eatNext) {
@@ -489,11 +481,11 @@ module.exports = class Ve {
             throw new Error("There's a path that allows array overshooting.");
           following = this.tokenArray[i+1];
           word.tokens.push(following);
-          word.appendToWord(following.surface_form);
+          word.appendToWord(following.surfaceForm);
           word.appendToReading(following.reading);
           word.appendToTranscription(this.getFeatureSafely(following, 'pronunciation'));
           if (eatLemma)
-            word.appendToLemma(following.basic_form);
+            word.appendToLemma(following.basicForm);
         }
         wordList.push(word);
       }

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "camelcase-keys": "^6.2.2",
     "kuromojin": "^2.0.0"
   }
 }
