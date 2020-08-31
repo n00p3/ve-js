@@ -335,6 +335,7 @@ module.exports = class Parse {
                 default:
                   break;
               }
+              break;
             case Parse.KAZU:
               pos = Pos.Number;
               if (wordList.length > 0 && wordList[finalSlot].pos === Parse.KAZU) {
