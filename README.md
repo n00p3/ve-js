@@ -7,8 +7,9 @@ It uses mecab as it's backend. All required dictionaries are included in ./lib d
 
 # How to use
 ``` js
-// As a first argument you can pass a path to directory with dictionaries.
 const Ve = require('./ve-js');
+
+// As a first argument you can pass a path to directory with dictionaries.
 const ve = new Ve();
 const words = await ve.words('答えてくれるはず');
 
