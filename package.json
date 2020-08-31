@@ -4,10 +4,15 @@
     "kuromojin": "^2.0.0"
   },
   "name": "@n00p3/ve-js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A linguistic framework for anyone. No degree required.",
   "main": "index.js",
   "repository": "https://github.com/n00p3/ve-js",
   "author": "Mateusz Głowski <no.name.dev.0@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "kuromoji",
+    "ve",
+    "japanese"
+  ]
 }
