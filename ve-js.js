@@ -1,8 +1,14 @@
+/**
+ * This project is a translation of https://github.com/Kimtaro/ve
+ */
+
 const Grammar = require('./grammar')
 const Pos = require('./pos');
 const Word = require('./Word');
+const path = require('path');
+const kuromojin = require('kuromojin');
 
-module.exports = class Parse {
+module.exports = class Ve {
   tokenArray = [];
 
   static get NO_DATA() {
@@ -216,18 +222,35 @@ module.exports = class Parse {
     return 'さ';
   };
 
-  constructor(tokenArray) {
-    if (tokenArray.length === 0)
-      throw new Error('Cannot parse an empty array of tokens.');
+  // constructor(sentence, dicPath = (path.join(__dirname, 'lib'))) {
+  //   return (async () => {
+  //     const tokenArray = await kuromojin.tokenize(sentence,      { dicPath });
+  //     if (tokenArray.length === 0)
+  //       throw new Error('Cannot parse an empty array of tokens.');
+  //
+  //     this.tokenArray = tokenArray;
+  //
+  //     return this;
+  //   })();
+  // }
 
-    this.tokenArray = tokenArray;
+  constructor(dicPath = (path.join(__dirname, 'lib'))) {
+    this.dicPath = dicPath;
   }
 
   /**
    * @return List of all words in the instance's tokenArray, or an empty list if tokenArray was empty.
    *         Ve returns an asterisk if no word was recognised.
    */
-  async words() {
+  async words(sentence) {
+    this.tokenArray = await kuromojin.tokenize(
+        sentence,
+        {
+          dicPath: this.dicPath,
+        });
+    if (this.tokenArray.length === 0)
+      throw new Error('Cannot parse an empty array of tokens.');
+
     /**
      * @type {Word[]}
      */
@@ -250,85 +273,85 @@ module.exports = class Parse {
 
       let currentPOSArray = current; // await kuromojin.tokenize(current);
 
-      if (Object.keys(currentPOSArray).length === 0 || currentPOSArray.pos === Parse.NO_DATA)
+      if (Object.keys(currentPOSArray).length === 0 || currentPOSArray.pos === Ve.NO_DATA)
         throw new Error('No Pos data found for token.');
 
       switch (currentPOSArray.pos) {
-        case Parse.MEISHI:
+        case Ve.MEISHI:
           pos = Pos.Noun;
-          if (currentPOSArray.pos_detail_1 === Parse.NO_DATA)
+          if (currentPOSArray.pos_detail_1 === Ve.NO_DATA)
             break;
           switch (currentPOSArray.pos_detail_1) {
-            case Parse.KOYUUMEISHI:
+            case Ve.KOYUUMEISHI:
               pos = Pos.ProperNoun;
               break;
-            case Parse.DAIMEISHI:
+            case Ve.DAIMEISHI:
               pos = Pos.Pronoun;
               break;
-            case Parse.FUKUSHI:
-            case Parse.SAHENSETSUZOKU:
-            case Parse.KEIYOUDOUSHIGOKAN:
-            case Parse.NAIKEIYOUSHIGOKAN:
-              if (currentPOSArray.pos_detail_2 === Parse.NO_DATA)
+            case Ve.FUKUSHI:
+            case Ve.SAHENSETSUZOKU:
+            case Ve.KEIYOUDOUSHIGOKAN:
+            case Ve.NAIKEIYOUSHIGOKAN:
+              if (currentPOSArray.pos_detail_2 === Ve.NO_DATA)
                 break;
               if (i === this.tokenArray.length - 1)
                 break;
 
               following = this.tokenArray[i + 1];
               switch (following.conjugated_type) {
-                case Parse.SAHEN_SURU:
+                case Ve.SAHEN_SURU:
                   pos = Pos.Verb;
                   eatNext = true;
                   break;
-                case Parse.TOKUSHU_DA:
+                case Ve.TOKUSHU_DA:
                   pos = Pos.Adjective;
-                  if (following.pos_detail_1 === Parse.TAIGENSETSUZOKU) {
+                  if (following.pos_detail_1 === Ve.TAIGENSETSUZOKU) {
                     eatNext = true;
                     eatLemma = false;
                   }
                   break;
-                case Parse.TOKUSHU_NAI:
+                case Ve.TOKUSHU_NAI:
                   pos = Pos.Adjective;
                   eatNext = true;
                   break;
                 default:
-                  if (following.pos === Parse.JOSHI && following.surface_form === Parse.NI)
+                  if (following.pos === Ve.JOSHI && following.surface_form === Ve.NI)
                     pos = Pos.Adverb;
                   break;
               }
               break;
-            case Parse.HIJIRITSU:
-            case Parse.TOKUSHU:
-              if (currentPOSArray.pos_detail_2 === Parse.NO_DATA)
+            case Ve.HIJIRITSU:
+            case Ve.TOKUSHU:
+              if (currentPOSArray.pos_detail_2 === Ve.NO_DATA)
                 break;
               if (i === this.tokenArray.length - 1)
                 break;
               following = this.tokenArray[i + 1];
 
               switch (currentPOSArray.pos_detail_2){
-                case Parse.FUKUSHIKANOU:
-                  if (following.pos === Parse.JOSHI && following.surface_form === Parse.NI) {
+                case Ve.FUKUSHIKANOU:
+                  if (following.pos === Ve.JOSHI && following.surface_form === Ve.NI) {
                     pos = Pos.Adverb;
                     eatNext = false;
                   }
                   break;
-                case Parse.JODOUSHIGOKAN:
-                  if (following.conjugated_type === Parse.TOKUSHU_DA) {
+                case Ve.JODOUSHIGOKAN:
+                  if (following.conjugated_type === Ve.TOKUSHU_DA) {
                     pos = Pos.Verb;
                     grammar = Grammar.Auxiliary;
-                    if (following.conjugated_form === Parse.TAIGENSETSUZOKU)
+                    if (following.conjugated_form === Ve.TAIGENSETSUZOKU)
                       eatNext = true;
-                  } else if (following.pos === Parse.JOSHI && following.pos_detail_2 === Parse.FUKUSHIKA) {
+                  } else if (following.pos === Ve.JOSHI && following.pos_detail_2 === Ve.FUKUSHIKA) {
                     pos = Pos.Adverb;
                     eatNext = true;
                   }
                   break;
-                case Parse.KEIYOUDOUSHIGOKAN:
+                case Ve.KEIYOUDOUSHIGOKAN:
                   pos = Pos.Adjective;
                   if (
-                    following.conjugated_type === Parse.TOKUSHU_DA &&
-                    following.conjugated_type === Parse.TAIGENSETSUZOKU ||
-                    following.pos_detail_1 === Parse.RENTAIKA
+                    following.conjugated_type === Ve.TOKUSHU_DA &&
+                    following.conjugated_type === Ve.TAIGENSETSUZOKU ||
+                    following.pos_detail_1 === Ve.RENTAIKA
                   )
                     eatNext = true;
                   break;
@@ -336,18 +359,18 @@ module.exports = class Parse {
                   break;
               }
               break;
-            case Parse.KAZU:
+            case Ve.KAZU:
               pos = Pos.Number;
-              if (wordList.length > 0 && wordList[finalSlot].pos === Parse.KAZU) {
+              if (wordList.length > 0 && wordList[finalSlot].pos === Ve.KAZU) {
                 attachToPrevious = true;
                 alsoAttachToLemma = true;
               }
               break;
-            case Parse.SETSUBI:
-              if (currentPOSArray.pos_detail_2 === Parse.JINMEI)
+            case Ve.SETSUBI:
+              if (currentPOSArray.pos_detail_2 === Ve.JINMEI)
                 pos = Pos.Suffix;
               else {
-                if (currentPOSArray.pos_detail_2 === Parse.TOKUSHU && currentPOSArray.basic_form === Parse.SA) {
+                if (currentPOSArray.pos_detail_2 === Ve.TOKUSHU && currentPOSArray.basic_form === Ve.SA) {
                   updatePos = true;
                   pos = Pos.Noun;
                 } else
@@ -355,10 +378,10 @@ module.exports = class Parse {
                 attachToPrevious = true;
               }
               break;
-            case Parse.SETSUZOKUSHITEKI:
+            case Ve.SETSUZOKUSHITEKI:
               pos = Pos.Conjunction;
               break;
-            case Parse.DOUSHIHIJIRITSUTEKI:
+            case Ve.DOUSHIHIJIRITSUTEKI:
               pos = Pos.Verb;
               grammar = Grammar.Nominal;
               break;
@@ -366,76 +389,76 @@ module.exports = class Parse {
               break;
           }
           break;
-        case Parse.SETTOUSHI:
+        case Ve.SETTOUSHI:
           pos = Pos.Prefix;
           break;
-        case Parse.JODOUSHI:
+        case Ve.JODOUSHI:
           pos = Pos.Postposition;
           const qualifyingList1 = [
-            Parse.TOKUSHU_TA,
-            Parse.TOKUSHU_NAI,
-            Parse.TOKUSHU_TAI,
-            Parse.TOKUSHU_MASU,
-            Parse.TOKUSHU_NU
+            Ve.TOKUSHU_TA,
+            Ve.TOKUSHU_NAI,
+            Ve.TOKUSHU_TAI,
+            Ve.TOKUSHU_MASU,
+            Ve.TOKUSHU_NU
           ];
           if (
             previous === null ||
-            previous.pos_detail_1 !== Parse.KAKARIJOSHI &&
+            previous.pos_detail_1 !== Ve.KAKARIJOSHI &&
             qualifyingList1.includes(current.conjugated_type)
           )
             attachToPrevious = true;
-          else if (current.conjugated_type === Parse.FUHENKAGATA && current.basic_form === Parse.NN)
+          else if (current.conjugated_type === Ve.FUHENKAGATA && current.basic_form === Ve.NN)
             attachToPrevious = true;
           else if (
-            current.conjugated_type === Parse.TOKUSHU_DA ||
-            current.basic_form === Parse.TOKUSHU_DESU &&
-            current.surface_form !== Parse.NA
+            current.conjugated_type === Ve.TOKUSHU_DA ||
+            current.basic_form === Ve.TOKUSHU_DESU &&
+            current.surface_form !== Ve.NA
           )
             pos = Pos.Verb;
           break;
-        case Parse.DOUSHI:
+        case Ve.DOUSHI:
           pos = Pos.Verb;
           switch (currentPOSArray.pos_detail_1) {
-            case Parse.SETSUBI:
+            case Ve.SETSUBI:
               attachToPrevious = true;
               break;
-            case Parse.HIJIRITSU:
-              if (current.conjugated_form !== Parse.MEIREI_I)
+            case Ve.HIJIRITSU:
+              if (current.conjugated_form !== Ve.MEIREI_I)
                 attachToPrevious = true;
             default:
               break;
           }
           break;
-        case Parse.KEIYOUSHI:
+        case Ve.KEIYOUSHI:
           pos = Pos.Adjective;
           break;
-        case Parse.JOSHI:
+        case Ve.JOSHI:
           pos = Pos.Postposition;
-          const qualifyingList2 = [Parse.TE, Parse.DE, Parse.BA];
+          const qualifyingList2 = [Ve.TE, Ve.DE, Ve.BA];
           if (
-            currentPOSArray.pos_detail_1 === Parse.SETSUZOKUJOSHI &&
+            currentPOSArray.pos_detail_1 === Ve.SETSUZOKUJOSHI &&
             qualifyingList2.includes(currentPOSArray.surface_form) ||
-            current.surface_form === Parse.NI
+            current.surface_form === Ve.NI
           )
             attachToPrevious = true;
           break;
-        case Parse.RENTAISHI:
+        case Ve.RENTAISHI:
           pos = Pos.Determiner;
           break;
-        case Parse.SETSUZOKUJOSHI:
+        case Ve.SETSUZOKUJOSHI:
           pos = Pos.Conjunction;
           break;
-        case Parse.FUKUSHI:
+        case Ve.FUKUSHI:
           pos = Pos.Adverb;
           break;
-        case Parse.KIGOU:
+        case Ve.KIGOU:
           pos = Pos.Symbol;
           break;
-        case Parse.FIRAA:
-        case Parse.KANDOUSHI:
+        case Ve.FIRAA:
+        case Ve.KANDOUSHI:
           pos = Pos.Interjection;
           break;
-        case Parse.SONOTA:
+        case Ve.SONOTA:
           pos = Pos.Other;
           break;
         default:
