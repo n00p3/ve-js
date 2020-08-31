@@ -3,9 +3,7 @@
  */
 
 const Parse = require('./parse')
-const kuromoji = require('kuromoji');
 const kuromojin = require('kuromojin');
-const util = require('util');
 const path = require('path');
 
 

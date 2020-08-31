@@ -1,4 +1,3 @@
-const kuromojin = require('kuromojin');
 const Grammar = require('./grammar')
 const Pos = require('./pos');
 const Word = require('./Word');
