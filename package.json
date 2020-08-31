@@ -4,7 +4,7 @@
     "kuromojin": "^2.0.0"
   },
   "name": "@n00p3/ve-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A linguistic framework for anyone. No degree required.",
   "main": "index.js",
   "repository": "https://github.com/n00p3/ve-js",
