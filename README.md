@@ -3,7 +3,7 @@
 
 Port of [ve](https://github.com/Kimtaro/ve) to JavaScript.
 
-It uses mecab as it's backend. All required dictionaries are included in ./lib directory.
+It uses kuromoji as it's backend. All required dictionaries are included in ./lib directory.
 
 # How to use
 ``` js
