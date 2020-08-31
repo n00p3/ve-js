@@ -2,5 +2,12 @@
   "dependencies": {
     "camelcase-keys": "^6.2.2",
     "kuromojin": "^2.0.0"
-  }
+  },
+  "name": "ve-js",
+  "version": "1.0.0",
+  "description": "A linguistic framework for anyone. No degree required.",
+  "main": "index.js",
+  "repository": "https://github.com/n00p3/ve-js",
+  "author": "Mateusz Głowski <no.name.dev.0@gmail.com>",
+  "license": "MIT"
 }
